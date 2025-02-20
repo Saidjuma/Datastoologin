@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Previous head content -->
+    <!-- Add Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-auth-compat.js"></script>
+    <style>
+        /* Previous styles */
+        .otp-container {
+            display: none;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Datastoo</h1>
+        <p class="login-text">Log in to explore all features on<br><strong>MyHalo</strong></p>
+
+        <form id="loginForm">
+            <div class="phone-input">
+                <span class="country-code">+255</span>
+                <input type="tel" id="phone" placeholder="Enter phone number" required>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="terms" required>
+                <label for="terms" style="margin-left: 8px;">I agree to the <a href="#">Terms of use</a></label>
+            </div>
+
+            <button type="submit" class="continue-btn">Continue</button>
+        </form>
+
+        <div class="otp-container" id="otpContainer">
+            <input type="text" id="otp" placeholder="Enter OTP" style="width: 100%; padding: 12px; margin-bottom: 1rem;">
+            <button class="continue-btn" onclick="verifyOTP()">Verify OTP</button>
+        </div>
+    </div>
+
+    <script>
+        // Your Firebase config (replace with your actual config)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDr9b1PGJr_tATP9kVz9TItEvliUr3FldI",
+            authDomain: "login-6a2c3.firebaseapp.com",
+            projectId: "login-6a2c3",
+            storageBucket: "login-6a2c3.firebasestorage.app",
+            messagingSenderId: "174427562218",
+            appId: "1:174427562218:web:dba688332731d75b293793"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth(app);
+        
+        let confirmationResult = null;
+        
+        // Initialize invisible reCAPTCHA
+        auth.settings.appVerificationDisabledForTesting = false; // Set to true for testing
+
+        // Handle form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const phoneNumber = `+255${document.getElementById('phone').value}`;
+            
+            try {
+                confirmationResult = await auth.signInWithPhoneNumber(
+                    phoneNumber, 
+                    new firebase.auth.RecaptchaVerifier('loginForm', {
+                        'size': 'invisible',
+                        'callback': () => {
+                            // reCAPTCHA solved, will proceed with verification
+                        }
+                    })
+                );
+                
+                // Show OTP input
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('otpContainer').style.display = 'block';
+            } catch (error) {
+                console.error('Error sending OTP:', error);
+                alert('Error sending OTP: ' + error.message);
+            }
+        });
+
+        // Verify OTP
+        async function verifyOTP() {
+            const otp = document.getElementById('otp').value;
+            
+            try {
+                const result = await confirmationResult.confirm(otp);
+                const user = result.user;
+                alert('Authentication successful! UID: ' + user.uid);
+                // Redirect or perform post-login actions here
+            } catch (error) {
+                console.error('Error verifying OTP:', error);
+                alert('Error verifying OTP: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
